@@ -17,12 +17,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 
-class NotificationService : Service() {
+class SecondNotificationService : Service() {
     //In order to make the required notification, a service is required
 //to do the job for us in the foreground process
 //Create the notification builder that'll be called later on
     private lateinit var notificationBuilder: NotificationCompat.Builder
-//Create a system handler which controls what thread the process is being executed on
+    //Create a system handler which controls what thread the process is being executed on
     private lateinit var serviceHandler: Handler
     //This is used to bind a two-way communication
 //In this tutorial, we will only be using a one-way communication
@@ -40,9 +40,9 @@ class NotificationService : Service() {
 //notification will be executed on.
 //'HandlerThread' provides the different thread for the process to be executed on,
 //while on the other hand, 'Handler' enqueues the process to HandlerThread to be executed.
-//Here, we're instantiating a new HandlerThread called "SecondThread"
+//Here, we're instantiating a new HandlerThread called "ThirdThread"
 //then we pass that HandlerThread into the main Handler called serviceHandler
-        val handlerThread = HandlerThread("SecondThread")
+        val handlerThread = HandlerThread("ThirdThread")
             .apply { start() }
         serviceHandler = Handler(handlerThread.looper)
     }
@@ -100,9 +100,9 @@ class NotificationService : Service() {
 //"Build.VERSION_CODES.O" stands for 'Oreo' which is the API 26 release name
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 //Create the channel id
-            val channelId = "001"
+            val channelId = "002"
 //Create the channel name
-            val channelName = "001 Channel"
+            val channelName = "002 Channel"
 //Create the channel priority
 //There are 3 common types of priority:
 //IMPORTANCE_HIGH - makes a sound, vibrates, appears as heads-up notification
@@ -131,27 +131,27 @@ class NotificationService : Service() {
     String) =
         NotificationCompat.Builder(this, channelId)
 //Sets the title
-            .setContentTitle("Second worker process is done")
+            .setContentTitle("Third worker process is done")
 //Sets the content
             .setContentText("Check it out!")
 //Sets the notification icon
             .setSmallIcon(R.drawable.ic_launcher_foreground)
 //Sets the action/intent to be executed when the user clicks the notification
-    .setContentIntent(pendingIntent)
+            .setContentIntent(pendingIntent)
 //Sets the ticker message (brief message on top of your device)
-    .setTicker("Second worker process is done, check it out!")
+            .setTicker("Third worker process is done, check it out!")
 //setOnGoing() controls whether the notification is dismissible or not by the user
 //If true, the notification is not dismissible and can only be closed by the app
-    .setOngoing(true)
+            .setOngoing(true)
     companion object {
         const val NOTIFICATION_ID = 0xCA7
-        const val EXTRA_ID = "Id"
-//this is a LiveData which is a data holder that automatically
+        const val EXTRA_ID = "Id0"
+        //this is a LiveData which is a data holder that automatically
 //updates the UI based on what is observed
 //It'll return the channel ID into the LiveData after
 //the countdown has reached 0, giving a sign that
 //the service process is done
-    private val mutableID = MutableLiveData<String>()
+        private val mutableID = MutableLiveData<String>()
         val trackingCompletion: LiveData<String> = mutableID
     }
     //This is a callback and part of a life cycle
@@ -160,7 +160,7 @@ class NotificationService : Service() {
 //in your startForegroundService() custom function
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int
     {
-        Log.d("WORKFLOW", "NotificationService STARTED")
+        Log.d("WORKFLOW", "SecondNotificationService STARTED")
         val returnValue = super.onStartCommand(intent,
             flags, startId)
 //Gets the channel id passed from the MainActivity through the Intent
@@ -169,7 +169,7 @@ class NotificationService : Service() {
 //Posts the notification task to the handler,
 //which will be executed on a different thread
         serviceHandler.post {
-            Log.d("WORKFLOW", "NotificationService COUNTDOWN running")
+            Log.d("WORKFLOW", "SecondNotificationService COUNTDOWN running")
 //Sets up what happens after the notification is posted
 //Here, we're counting down from 10 to 0 in the notification
             countDownFromTenToZero(notificationBuilder)
@@ -181,18 +181,18 @@ class NotificationService : Service() {
             stopForeground(STOP_FOREGROUND_REMOVE)
 //Stop and destroy the service
             stopSelf()
-            Log.d("WORKFLOW", "NotificationService COUNTDOWN complete")
+            Log.d("WORKFLOW", "SecondNotificationService COUNTDOWN complete")
         }
         return returnValue
     }
-//A function to update the notification to display a count down from 10 to 0
+    //A function to update the notification to display a count down from 10 to 0
     private fun countDownFromTenToZero(notificationBuilder:
                                        NotificationCompat.Builder) {
 //Gets the notification manager
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as
                 NotificationManager
 //Count down from 10 to 0
-        for (i in 5 downTo 0) {
+        for (i in 3 downTo 0) {
             Thread.sleep(1000L)
 //Updates the notification content text
             notificationBuilder.setContentText("$i seconds until last warning")
@@ -205,11 +205,11 @@ class NotificationService : Service() {
         }
     }
     //Update the LiveData with the returned channel id through the Main Thread
-//the Main Thread is identified by calling the "getMainLooper()" method
-//This function is called after the count down has completed
-    private fun notifyCompletion(Id: String) {
+    //the Main Thread is identified by calling the "getMainLooper()" method
+    //This function is called after the count down has completed
+    private fun notifyCompletion(Id0: String) {
         Handler(Looper.getMainLooper()).post {
-            mutableID.value = Id
+            mutableID.value = Id0
         }
     }
 }
